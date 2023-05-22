@@ -44,28 +44,28 @@ namespace MyTelegramBot
                 if (message.Text.ToLower() == "/start")
                 {
                     await HandleStartCommandAsync(botClient, chatId, cancellationToken);
-                    
+                }
+                else
+                {
+                    await botClient.SendTextMessageAsync(chatId, "Привет! Я создан, чтоб облегчить твой день.введи /start чтобы начать");
                 }
             }
         }
-        public static async Task HandleStartCommandAsync(ITelegramBotClient botClient,ChatId chatId, CancellationToken cancellationToken)
+        public static async Task HandleStartCommandAsync(ITelegramBotClient botClient, ChatId chatId, CancellationToken cancellationToken)
         {
-            ReplyKeyboardMarkup replyKeyboardMarkup =
-                   new(new[]
+            InlineKeyboardMarkup inlineKeyboard = new(new[]
+            {
+                   new[]
                    {
-                        new KeyboardButton[] { "Button 1" },
-                        new KeyboardButton[] { "переводчик" },
-                        new KeyboardButton[] { "организации" },
-                        new KeyboardButton[] { "отдых" },
+                        InlineKeyboardButton.WithCallbackData(text: "Upload meter Data", callbackData:"11"),
+                        InlineKeyboardButton.WithCallbackData(text: "Check 24", callbackData:"12"),
+                   },
+            });
 
-                   })
-                   {
-                       ResizeKeyboard = false
-                   };
             Message sentMessage = await botClient.SendTextMessageAsync(
                 chatId: chatId,
                 text: "выберите действие",
-                replyMarkup: replyKeyboardMarkup,
+                replyMarkup: inlineKeyboard,
                 cancellationToken: cancellationToken);
         }
     }
