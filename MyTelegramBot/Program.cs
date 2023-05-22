@@ -1,22 +1,72 @@
 ﻿using Telegram.Bot;
 using System;
+using System.IO;
 using System.Threading.Tasks;
+using Telegram.Bot.Types;
+using Telegram.Bot.Polling;
+using Telegram.Bot.Types.ReplyMarkups;
+using System.Security.Cryptography.X509Certificates;
+
 namespace MyTelegramBot
 {
     class Programm
     {
-        static async Task Main(string[] args)
+        static ITelegramBotClient bot = new TelegramBotClient("5617391285:AAH28H0P9UYLh6LgKtz12lz4IxIrn3hDmjk");
+        static void Main(string[] args)
         {
-            await StartBotAsync();
+            Console.WriteLine($"====Bot {bot.GetMeAsync().Result.FirstName} started====\n");
+            var recieverOptions = new ReceiverOptions
+            {
+                AllowedUpdates = { },
+            };
+            CancellationToken cancellationToken = default;
+            bot.StartReceiving(
+                HandleUpdateAsync,
+                HandleErrorAsync,
+                recieverOptions,
+                cancellationToken
+                );
+            Console.ReadKey();
+
         }
-        static async Task StartBotAsync()
+        public static async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
-            var botClient = new TelegramBotClient("5617391285:AAH28H0P9UYLh6LgKtz12lz4IxIrn3hDmjk");
+            Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(exception));
+        }
 
-            var me = await botClient.GetMeAsync();
+        public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+        {
+            Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(update));
+            if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
+            {
+                var message = update.Message;
+                var chatId = message.Chat.Id;
+                if (message.Text.ToLower() == "/start")
+                {
+                    await HandleStartCommandAsync(botClient, chatId, cancellationToken);
+                    
+                }
+            }
+        }
+        public static async Task HandleStartCommandAsync(ITelegramBotClient botClient,ChatId chatId, CancellationToken cancellationToken)
+        {
+            ReplyKeyboardMarkup replyKeyboardMarkup =
+                   new(new[]
+                   {
+                        new KeyboardButton[] { "Button 1" },
+                        new KeyboardButton[] { "переводчик" },
+                        new KeyboardButton[] { "организации" },
+                        new KeyboardButton[] { "отдых" },
 
-            Console.WriteLine($"Bot is sucssesfully started user ID {me.Id}" +
-                $"my name is {me.Username}");
+                   })
+                   {
+                       ResizeKeyboard = false
+                   };
+            Message sentMessage = await botClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: "выберите действие",
+                replyMarkup: replyKeyboardMarkup,
+                cancellationToken: cancellationToken);
         }
     }
 }
