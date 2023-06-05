@@ -10,7 +10,7 @@ namespace MyTelegramBot
     {
         static readonly string _token = System.IO.File.ReadAllText("C:\\Users\\koval\\Desktop\\Projekts\\MyTelegramBotApp\\MyTelegramBot\\token.txt");
 
-        private static ChooseMenu _chooseMenu;
+        private static ChooseMenu? _chooseMenu;
         private static Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
             var errorMessage = exception.ToString();
@@ -43,50 +43,64 @@ namespace MyTelegramBot
 
             cts.Cancel();
 
-        }   
+        }
         public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-
-            switch (update.Type)
+            if (_chooseMenu == null)
             {
-                case UpdateType.Message:
-                    {
-                        if(update.Message != null)
+                _chooseMenu = new(botClient, update.Message.Chat);
+            }
+            try
+            {
+                switch (update.Type)
+                {
+                    case UpdateType.Message:
+                        {
+                            if (update.Message != null)
+                            {
+
+                                await BotOnMessageReceiving(botClient, update.Message);
+                            }
+
+                            break;
+                        }
+                    case UpdateType.CallbackQuery:
                         {
 
-                         await BotOnMessageReceiving(botClient, update.Message);
-                        }
-
-                        break;
-                    }
-                case UpdateType.CallbackQuery:
-                    {
-                        
                             if (update.CallbackQuery != null)
                             {
                                 await _chooseMenu.OnAnswer(update.CallbackQuery);
                             }
-                        
-                        break;
-                    }
+
+                            break;
+                        }
+                }
             }
+            catch (Exception exception)
+            {
+
+                await HandlePollingErrorAsync(botClient, exception,cancellationToken);
+                     
+            }
+
         }
         public static async Task BotOnMessageReceiving(ITelegramBotClient botClient, Message message)
         {
+            ChooseMenu menu = new(botClient, message.Chat);
             var chatId = message.Chat.Id;
             Console.WriteLine($"Recieved message type{message.Type} ");
 
             if (message.Type != MessageType.Text)
             {
-                return;
+                Console.WriteLine($"Recieved message type{message.Type} ");
             }
             var action = message.Text!.Split(' ')[0];
             switch (action)
             {
                 case "/start":
                     {
-                        var chooseMenu = new ChooseMenu(botClient, message.Chat);
-                       await chooseMenu.StartMenu();
+
+                        await menu.StartMenu();
                         break;
                     }
                 default:

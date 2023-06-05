@@ -11,15 +11,15 @@ namespace MyTelegramBot.BotLogic
 {
     public class ChooseMenu
     {
-        private ITelegramBotClient _botClient;
-        private Chat _chat;
+        private ITelegramBotClient _botClient { get; set; }
+        private Chat _chat { get; set; }
         public ChooseMenu(ITelegramBotClient botClient, Chat chat)
         {
-            this._botClient = botClient;
-            this._chat = chat;
+            _botClient = botClient;
+            _chat = chat;
         }
 
-        public async Task StartMenu()
+        public  async Task StartMenu()
         {
             InlineKeyboardMarkup inlineKeyboard = new(
                   new[] {
@@ -58,7 +58,7 @@ namespace MyTelegramBot.BotLogic
                             }
                         }
                        );
-                        await _botClient.SendTextMessageAsync(_chat.Id, "Choose option",replyMarkup: inlineKeyboard);
+                        await _botClient.SendTextMessageAsync(_chat, "Choose option",replyMarkup: inlineKeyboard);
 
                         break;
                     }
