@@ -11,12 +11,13 @@ namespace MyTelegramBot.BotLogic
 {
     public class ChooseMenu
     {
+       
         private ITelegramBotClient _botClient { get; set; }
         private Chat _chat { get; set; }
         public ChooseMenu(ITelegramBotClient botClient, Chat chat)
         {
-            _botClient = botClient;
-            _chat = chat;
+           this._botClient = botClient;
+           this._chat = chat;
         }
 
         public  async Task StartMenu()
@@ -53,18 +54,45 @@ namespace MyTelegramBot.BotLogic
                         new[] {
                             new[]
                             {
-                                InlineKeyboardButton.WithCallbackData("Download electricity meter screenshot","download"),
-                                InlineKeyboardButton.WithCallbackData("Enter meter state","state")
+                                InlineKeyboardButton.WithCallbackData("Download electricity meter screenshot","downloadElec"),
+                                InlineKeyboardButton.WithCallbackData("Enter meter state","stateElec")
                             }
                         }
                        );
                         await _botClient.SendTextMessageAsync(_chat, "Choose option",replyMarkup: inlineKeyboard);
 
                         break;
+                        
                     }
+                case "gas":
+                    {
+                       
+                        InlineKeyboardMarkup inlineKeyboard = new(
+                        new[] {
+                            new[]
+                            {
+                                InlineKeyboardButton.WithCallbackData("Download electricity meter screenshot","downloadGas"),
+                                InlineKeyboardButton.WithCallbackData("Enter meter state","stateGas")
+                            }
+                        }
+                       );
+                        await _botClient.SendTextMessageAsync(_chat, "Choose option", replyMarkup: inlineKeyboard);
 
+                        break;
+                    }
+                case "downloadElec":
+                    {
 
+                    await _botClient.SendTextMessageAsync(_chat, "Please send me your picture for downloading.");
+
+                            
+                        
+                       
+                        break;
+                    }
             }
+
         }
+     
     }
 }

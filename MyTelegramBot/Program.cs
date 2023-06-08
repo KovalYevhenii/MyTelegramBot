@@ -1,4 +1,7 @@
 ﻿using MyTelegramBot.BotLogic;
+using System.Net;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -10,6 +13,9 @@ namespace MyTelegramBot
     {
         static readonly string _token = System.IO.File.ReadAllText("C:\\Users\\koval\\Desktop\\Projekts\\MyTelegramBotApp\\MyTelegramBot\\token.txt");
 
+        
+
+
         private static ChooseMenu? _chooseMenu;
         private static Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
@@ -17,8 +23,6 @@ namespace MyTelegramBot
             Console.WriteLine(errorMessage);
             return Task.CompletedTask;
         }
-
-
         private static async Task Main(string[] args)
         {
             CancellationTokenSource cts = new();
@@ -46,6 +50,7 @@ namespace MyTelegramBot
         }
         public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
+
             if (_chooseMenu == null)
             {
                 _chooseMenu = new(botClient, update.Message.Chat);
@@ -61,7 +66,10 @@ namespace MyTelegramBot
 
                                 await BotOnMessageReceiving(botClient, update.Message);
                             }
-
+                            if (update.Message?.Document != null)
+                            {
+                              await FileDownloader(botClient,update,cancellationToken);
+                            }
                             break;
                         }
                     case UpdateType.CallbackQuery:
@@ -78,11 +86,8 @@ namespace MyTelegramBot
             }
             catch (Exception exception)
             {
-
-                await HandlePollingErrorAsync(botClient, exception,cancellationToken);
-                     
+                await HandlePollingErrorAsync(botClient, exception, cancellationToken);
             }
-
         }
         public static async Task BotOnMessageReceiving(ITelegramBotClient botClient, Message message)
         {
@@ -92,7 +97,7 @@ namespace MyTelegramBot
 
             if (message.Type != MessageType.Text)
             {
-                Console.WriteLine($"Recieved message type{message.Type} ");
+                return;
             }
             var action = message.Text!.Split(' ')[0];
             switch (action)
@@ -115,6 +120,24 @@ namespace MyTelegramBot
             await botClient.SendTextMessageAsync(chatId, "Hi, I was developed to make your day easier! press /start");
 
         }
+        public static async Task FileDownloader(ITelegramBotClient botClient,Update update,CancellationToken cancellationToken)
+        {
+
+            var fileId = update.Message.Document.FileId;
+            var fileInfo = await botClient.GetFileAsync(fileId);
+            var filePath = fileInfo.FilePath;
+
+            string destinationFilePath = $@"C:\Users\koval\Desktop\file\{update.Message.Document.FileName}";
+
+            await using Stream fileStream = System.IO.File.Create(destinationFilePath);
+            await botClient.DownloadFileAsync(
+                filePath: filePath,
+                destination: fileStream,
+                cancellationToken: cancellationToken);
+        }
+
+       
+
 
     }
 
