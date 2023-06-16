@@ -6,16 +6,17 @@ namespace MyTelegramBot
     public class TelegramFileDownloader
     {
         private readonly IMessageSender _messageSender;
-        public TelegramFileDownloader(IMessageSender messageSender) => _messageSender = messageSender;
-
-        private readonly string baseFolderPath = @"C:\Users\koval\Desktop\resources\";
-
+        public string? baseFolderPath { get; set; }
+        public TelegramFileDownloader(IMessageSender messageSender)
+        {
+            _messageSender = messageSender;
+        }
+        //@"C:\Users\koval\Desktop\resources\"
         public async Task Download(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
 
             if (update.Message?.Document != null)
             {
-
                 try
                 {
                     var fileId = update.Message.Document.FileId;
@@ -40,8 +41,6 @@ namespace MyTelegramBot
                 {
                     await _messageSender.SendTextMessageAsync(botClient, update.Message.Chat.Id, $"An error occurred: {ex.Message}");
                 }
-
-
             }
             else
             {

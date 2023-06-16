@@ -1,5 +1,6 @@
 ﻿using MyTelegramBot.BotLogic;
 using MyTelegramBot.MessageHandler;
+using MyTelegramBot.PathProvider;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -65,7 +66,7 @@ namespace MyTelegramBot
                                 if (update.Message?.Document != null)
                                 {
                                     IMessageSender messageSender = new TelegramMessageSender();
-
+                                 
                                     bool useTelegramMessageSender = false; // Set to false if you want to use ConsoleMessageSender
 
                                     if (useTelegramMessageSender)
@@ -76,9 +77,9 @@ namespace MyTelegramBot
                                     {
                                         messageSender = new ConsoleMessageSender();
                                     }
-                                    var file = new TelegramFileDownloader(messageSender);
-
-                                  
+                                    IFilePathProvider pathProvider = new FilePathProvider();
+                                    var file = new TelegramFileDownloader(messageSender, pathProvider);
+                                    
                                     await file.Download(botClient, update, cancellationToken);
                                 }
                             }
