@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Reflection.Emit;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace MyTelegramBot.BotLogic
@@ -15,11 +14,10 @@ namespace MyTelegramBot.BotLogic
         private Chat _chat { get; set; }
         public ChooseMenu(ITelegramBotClient botClient, Chat chat)
         {
-            _botClient = botClient;
-            _chat = chat;
+            this._botClient = botClient;
+            this._chat = chat;
         }
-
-        public  async Task StartMenu()
+        public async Task StartMenu()
         {
             InlineKeyboardMarkup inlineKeyboard = new(
                   new[] {
@@ -35,14 +33,13 @@ namespace MyTelegramBot.BotLogic
                     {
                         InlineKeyboardButton.WithCallbackData("Handle Gas resuorces", "gas")
                     }
-                  }
-                  );
+                  });
 
             await _botClient.SendTextMessageAsync(_chat.Id,
                     $"Choose what you want to do",
                     replyMarkup: inlineKeyboard);
         }
-        public async Task OnAnswer(CallbackQuery callbackQuery)
+        public async Task OnAnswer(Update update, CallbackQuery callbackQuery)
         {
             switch (callbackQuery.Data)
             {
@@ -53,18 +50,39 @@ namespace MyTelegramBot.BotLogic
                         new[] {
                             new[]
                             {
-                                InlineKeyboardButton.WithCallbackData("Download electricity meter screenshot","download"),
-                                InlineKeyboardButton.WithCallbackData("Enter meter state","state")
+                                InlineKeyboardButton.WithCallbackData("Download electricity meter screenshot","downloadElec"),
+                                InlineKeyboardButton.WithCallbackData("Enter meter state","stateElec")
                             }
-                        }
-                       );
-                        await _botClient.SendTextMessageAsync(_chat, "Choose option",replyMarkup: inlineKeyboard);
+                        });
+                        await _botClient.SendTextMessageAsync(_chat, "Choose option", replyMarkup: inlineKeyboard);
 
                         break;
                     }
+                case "gas":
+                    {
 
+                        InlineKeyboardMarkup inlineKeyboard = new(
+                        new[] {
+                            new[]
+                            {
+                                InlineKeyboardButton.WithCallbackData("Download electricity meter screenshot","downloadGas"),
+                                InlineKeyboardButton.WithCallbackData("Enter meter state","stateGas")
+                            }
+                        });
 
+                        await _botClient.SendTextMessageAsync(_chat, "Choose option", replyMarkup: inlineKeyboard);
+
+                        break;
+                    }
+                case "downloadElec":
+                    {
+                        await _botClient.SendTextMessageAsync(_chat, "Please send me your screenshot as Dokument for downloading.");
+
+                        break;
+                    }
             }
+
         }
+
     }
 }

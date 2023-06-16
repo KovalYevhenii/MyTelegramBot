@@ -1,4 +1,6 @@
 ﻿using MyTelegramBot.BotLogic;
+using MyTelegramBot.MessageHandler;
+using MyTelegramBot.PathProvider;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -11,14 +13,13 @@ namespace MyTelegramBot
         static readonly string _token = System.IO.File.ReadAllText("C:\\Users\\koval\\Desktop\\Projekts\\MyTelegramBotApp\\MyTelegramBot\\token.txt");
 
         private static ChooseMenu? _chooseMenu;
+        
         private static Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
             var errorMessage = exception.ToString();
             Console.WriteLine(errorMessage);
             return Task.CompletedTask;
         }
-
-
         private static async Task Main(string[] args)
         {
             CancellationTokenSource cts = new();
@@ -46,43 +47,59 @@ namespace MyTelegramBot
         }
         public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
+
             if (_chooseMenu == null)
             {
-                _chooseMenu = new(botClient, update.Message.Chat);
+                _chooseMenu = new ChooseMenu(botClient, update.Message.Chat);
             }
             try
             {
                 switch (update.Type)
                 {
+
                     case UpdateType.Message:
                         {
                             if (update.Message != null)
                             {
-
                                 await BotOnMessageReceiving(botClient, update.Message);
+
+                                if (update.Message?.Document != null)
+                                {
+                                    IMessageSender messageSender = new TelegramMessageSender();
+                                 
+                                    bool useTelegramMessageSender = false; // Set to false if you want to use ConsoleMessageSender
+
+                                    if (useTelegramMessageSender)
+                                    {
+                                        messageSender = new TelegramMessageSender();
+                                    }
+                                    else
+                                    {
+                                        messageSender = new ConsoleMessageSender();
+                                    }
+                                    IFilePathProvider pathProvider = new FilePathProvider();
+                                    var file = new TelegramFileDownloader(messageSender, pathProvider);
+                                    
+                                    await file.Download(botClient, update, cancellationToken);
+                                }
                             }
 
                             break;
                         }
                     case UpdateType.CallbackQuery:
                         {
-
                             if (update.CallbackQuery != null)
                             {
-                                await _chooseMenu.OnAnswer(update.CallbackQuery);
+                                await _chooseMenu.OnAnswer(update, update.CallbackQuery);
                             }
-
                             break;
                         }
                 }
             }
             catch (Exception exception)
             {
-
-                await HandlePollingErrorAsync(botClient, exception,cancellationToken);
-                     
+                await HandlePollingErrorAsync(botClient, exception, cancellationToken);
             }
-
         }
         public static async Task BotOnMessageReceiving(ITelegramBotClient botClient, Message message)
         {
@@ -92,14 +109,13 @@ namespace MyTelegramBot
 
             if (message.Type != MessageType.Text)
             {
-                Console.WriteLine($"Recieved message type{message.Type} ");
+                return;
             }
             var action = message.Text!.Split(' ')[0];
             switch (action)
             {
                 case "/start":
                     {
-
                         await menu.StartMenu();
                         break;
                     }
