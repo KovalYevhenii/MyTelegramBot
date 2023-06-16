@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Telegram.Bot.Types;
 
-namespace MyTelegramBot.BotLogic
+namespace MyTelegramBot.PathProvider
 {
-    internal class DownloadHandler
+    internal class ElectricFilePathprovider
     {
-       
     }
 }
