@@ -6,12 +6,12 @@ namespace MyTelegramBot
     public class TelegramFileDownloader
     {
         private readonly IMessageSender _messageSender;
-        public string? baseFolderPath { get; set; }
+        public string? baseFolderPath = @"C:\Users\koval\Desktop\resources\";
         public TelegramFileDownloader(IMessageSender messageSender)
         {
             _messageSender = messageSender;
         }
-        //@"C:\Users\koval\Desktop\resources\"
+        //
         public async Task Download(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
 
