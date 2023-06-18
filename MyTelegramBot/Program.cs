@@ -14,7 +14,7 @@ namespace MyTelegramBot
         static readonly string _token = System.IO.File.ReadAllText("C:\\Users\\koval\\Desktop\\Projekts\\MyTelegramBotApp\\MyTelegramBot\\token.txt");
 
         private static ChooseMenu? _chooseMenu;
-        
+
         private static Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
             var errorMessage = exception.ToString();
@@ -56,18 +56,27 @@ namespace MyTelegramBot
             try
             {
                 switch (update.Type)
-                {
+                { 
                     case UpdateType.Message:
                         {
                             if (update.Message != null)
                             {
                                 await BotOnMessageReceiving(botClient, update.Message);
 
-                                if (update.Message?.Document != null && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.Download)
+                                if (update.Message?.Document != null && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadE || _chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadG)
                                 {
                                     IMessageSender messageSender = new TelegramMessageSender();
-                                    IFilePathProvider filePathProvider = new ElecFilePathProvider();
-                                
+
+                                    IFilePathProvider filePathProvider = new DefaultFilePathProvider();
+                                    if(_chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadE)
+                                    {
+                                        filePathProvider = new ElecFilePathProvider();
+                                    }
+                                   else if(_chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadG)
+                                    {
+                                        filePathProvider = new GasFilePathProvider();
+                                    }
+
                                     bool useTelegramMessageSender = false; // Set to false if you want to use ConsoleMessageSender
 
                                     if (useTelegramMessageSender)
@@ -78,16 +87,16 @@ namespace MyTelegramBot
                                     {
                                         messageSender = new ConsoleMessageSender();
                                     }
-                                    
-                                    var file = new TelegramFileDownloader(botClient, update,messageSender, filePathProvider);
-                                    
-                                    await file.Download(); //removed parameter IFileproveder...check if error occures
-                                    
+
+                                    var file = new TelegramFileDownloader(botClient, update, messageSender, filePathProvider);
+
+                                    await file.Download(); 
                                 }
                             }
 
                             break;
                         }
+                        
                     case UpdateType.CallbackQuery:
                         {
                             if (update.CallbackQuery != null)
@@ -113,7 +122,9 @@ namespace MyTelegramBot
             {
                 return;
             }
+
             var action = message.Text!.Split(' ')[0];
+
             switch (action)
             {
                 case "/start":
@@ -130,7 +141,7 @@ namespace MyTelegramBot
         }
         public static async Task StartMessage(ITelegramBotClient botClient, ChatId chatId)
         {
-            await botClient.SendTextMessageAsync(chatId, "Hi, I was developed to make your day easier! press /start");
+            await botClient.SendTextMessageAsync(chatId, "Hi🥰, I was developed to make your day easier! press /start");
         }
 
     }

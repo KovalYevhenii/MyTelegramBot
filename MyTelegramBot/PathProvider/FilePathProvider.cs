@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MyTelegramBot.PathProvider
 {
-    public class FilePathProvider : IFilePathProvider
+    public class DefaultFilePathProvider : IFilePathProvider
     {
         public string GetDestinationFilePath(string fileName)
         {
@@ -19,6 +19,14 @@ namespace MyTelegramBot.PathProvider
         public string GetDestinationFilePath(string fileName)
         {
             string basePath = @"C:\Users\koval\Desktop\resources\electricity";
+            return Path.Combine(basePath, fileName);
+        }
+    }
+    public class GasFilePathProvider : IFilePathProvider
+    {
+        public string GetDestinationFilePath(string fileName)
+        {
+            string basePath = @"C:\Users\koval\Desktop\resources\gas";
             return Path.Combine(basePath, fileName);
         }
     }

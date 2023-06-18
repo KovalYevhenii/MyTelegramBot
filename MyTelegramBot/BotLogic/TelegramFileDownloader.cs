@@ -20,7 +20,6 @@ namespace MyTelegramBot
         }
         public async Task Download()
         {
-
             if (Update.Message.Document != null)
             {
                 try

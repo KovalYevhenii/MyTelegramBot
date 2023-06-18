@@ -11,14 +11,14 @@ namespace MyTelegramBot.BotLogic
         {
             Main,
             Settings,
-            Download
+            DownloadE,
+            DownloadG
         }
-        private  MenuState _menuState;
+        private MenuState _menuState;
         public MenuState GetMenuState()
         {
             return _menuState;
         }
-        
         private ITelegramBotClient BotClient { get; set; }
         private Chat Chat { get; set; }
         public ChooseMenu(ITelegramBotClient botClient, Chat chat)
@@ -56,7 +56,7 @@ namespace MyTelegramBot.BotLogic
             switch (callbackQuery.Data)
             {
                 case "elec":
-                    {   
+                    {
                         InlineKeyboardMarkup inlineKeyboard = new(
                         new[] {
                             new[]
@@ -64,7 +64,12 @@ namespace MyTelegramBot.BotLogic
                                 InlineKeyboardButton.WithCallbackData("Download electricity meter screenshot","downloadElec"),
 
                                 InlineKeyboardButton.WithCallbackData("Enter meter state","stateElec")
-                            }
+                            },
+                             new[]
+                             {
+                                InlineKeyboardButton.WithCallbackData("⏪","return")
+                             }
+
                         });
                         await BotClient.SendTextMessageAsync(Chat, "Choose option", replyMarkup: inlineKeyboard);
 
@@ -76,10 +81,14 @@ namespace MyTelegramBot.BotLogic
                         new[] {
                             new[]
                             {
-                                InlineKeyboardButton.WithCallbackData("Download electricity meter screenshot","downloadGas"),
+                                InlineKeyboardButton.WithCallbackData("Download Gas meter screenshot","downloadGas"),
 
                                 InlineKeyboardButton.WithCallbackData("Enter meter state","stateGas")
-                            }
+                            },
+                             new[]
+                             {
+                                InlineKeyboardButton.WithCallbackData("⏪","return")
+                             }
                         });
 
                         await BotClient.SendTextMessageAsync(Chat, "Choose option", replyMarkup: inlineKeyboard);
@@ -88,9 +97,19 @@ namespace MyTelegramBot.BotLogic
                     }
                 case "downloadElec":
                     {
-                        _menuState = MenuState.Download;
+                        _menuState = MenuState.DownloadE;
                         await BotClient.SendTextMessageAsync(Chat, "Please send me your screenshot as Dokument for downloading.");
-                      
+                        break;
+
+                    }  case "downloadGas":
+                    {
+                        _menuState = MenuState.DownloadG;
+                        await BotClient.SendTextMessageAsync(Chat, "Please send me your screenshot as Dokument for downloading.");
+                        break;
+                    }
+                case "return":
+                    {
+                        await StartMenu();
                         break;
                     }
             }
