@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using MyTelegramBot.PathProvider;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace MyTelegramBot
@@ -6,45 +7,51 @@ namespace MyTelegramBot
     public class TelegramFileDownloader
     {
         private readonly IMessageSender _messageSender;
-        public string? baseFolderPath { get; set; }
-        public TelegramFileDownloader(IMessageSender messageSender)
+        private readonly IFilePathProvider _filePathProvider;
+        private ITelegramBotClient BotClient { get; set; }
+        private Update Update { get; set; }
+
+        public TelegramFileDownloader(ITelegramBotClient botClient, Update update, IMessageSender messageSender, IFilePathProvider filePathProvider)
         {
+            this.BotClient = botClient;
+            this.Update = update;
+            _filePathProvider = filePathProvider;
             _messageSender = messageSender;
         }
-        //@"C:\Users\koval\Desktop\resources\"
-        public async Task Download(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+        public async Task Download()
         {
 
-            if (update.Message?.Document != null)
+            if (Update.Message.Document != null)
             {
                 try
                 {
-                    var fileId = update.Message.Document.FileId;
-                    var fileInfo = await botClient.GetFileAsync(fileId, cancellationToken: cancellationToken);
+                    var fileId = Update.Message.Document.FileId;
+                    var fileInfo = await BotClient.GetFileAsync(fileId);
                     var filePath = fileInfo.FilePath;
-                    string fileName = $"{DateTime.Now:dd.MM.yy}_{update.Message.Document.FileName}";
+                    string fileName = $"{DateTime.Now:dd.MM.yy}_{Update.Message.Document.FileName}";
 
-                    string destinationFilePath = Path.Combine(baseFolderPath, fileName);
+                    string destinationFilePath = _filePathProvider.GetDestinationFilePath(fileName);
 
                     await using Stream fileStream = System.IO.File.Create(destinationFilePath);
+
                     if (!string.IsNullOrEmpty(filePath))
                     {
-                        await botClient.DownloadFileAsync(filePath, fileStream, cancellationToken);
-                        await _messageSender.SendTextMessageAsync(botClient, update.Message.Chat.Id, "Document downloaded!");
+                        await BotClient.DownloadFileAsync(filePath, fileStream);
+                        await _messageSender.SendTextMessageAsync(BotClient, Update.Message.Chat.Id, "Document downloaded!");
                     }
                     else
                     {
-                        await _messageSender.SendTextMessageAsync(botClient, update.Message.Chat.Id, "Ivalid File path");
+                        await _messageSender.SendTextMessageAsync(BotClient, Update.Message.Chat.Id, "Ivalid File path");
                     }
                 }
                 catch (Exception ex)
                 {
-                    await _messageSender.SendTextMessageAsync(botClient, update.Message.Chat.Id, $"An error occurred: {ex.Message}");
+                    await _messageSender.SendTextMessageAsync(BotClient, Update.Message.Chat.Id, $"An error occurred: {ex.Message}");
                 }
             }
             else
             {
-                await _messageSender.SendTextMessageAsync(botClient, update.Message.Chat.Id, "Document was null or not provided.");
+                await _messageSender.SendTextMessageAsync(BotClient, Update.Message.Chat.Id, "Document was null or not provided.");
             }
         }
     }

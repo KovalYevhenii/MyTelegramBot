@@ -1,6 +1,7 @@
 ﻿using MyTelegramBot.BotLogic;
 using MyTelegramBot.MessageHandler;
 using MyTelegramBot.PathProvider;
+using System.Resources;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -56,17 +57,17 @@ namespace MyTelegramBot
             {
                 switch (update.Type)
                 {
-
                     case UpdateType.Message:
                         {
                             if (update.Message != null)
                             {
                                 await BotOnMessageReceiving(botClient, update.Message);
 
-                                if (update.Message?.Document != null)
+                                if (update.Message?.Document != null && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.Download)
                                 {
                                     IMessageSender messageSender = new TelegramMessageSender();
-                                 
+                                    IFilePathProvider filePathProvider = new ElecFilePathProvider();
+                                
                                     bool useTelegramMessageSender = false; // Set to false if you want to use ConsoleMessageSender
 
                                     if (useTelegramMessageSender)
@@ -77,10 +78,11 @@ namespace MyTelegramBot
                                     {
                                         messageSender = new ConsoleMessageSender();
                                     }
-                                    IFilePathProvider pathProvider = new FilePathProvider();
-                                    var file = new TelegramFileDownloader(messageSender, pathProvider);
                                     
-                                    await file.Download(botClient, update, cancellationToken);
+                                    var file = new TelegramFileDownloader(botClient, update,messageSender, filePathProvider);
+                                    
+                                    await file.Download(); //removed parameter IFileproveder...check if error occures
+                                    
                                 }
                             }
 
@@ -129,7 +131,6 @@ namespace MyTelegramBot
         public static async Task StartMessage(ITelegramBotClient botClient, ChatId chatId)
         {
             await botClient.SendTextMessageAsync(chatId, "Hi, I was developed to make your day easier! press /start");
-
         }
 
     }
