@@ -1,4 +1,5 @@
 ﻿
+using System.Threading;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -12,7 +13,9 @@ namespace MyTelegramBot.BotLogic
             Main,
             Settings,
             DownloadE,
-            DownloadG
+            DownloadG,
+            StateE,
+            StateG
         }
         private MenuState _menuState;
         public MenuState GetMenuState()
@@ -68,7 +71,9 @@ namespace MyTelegramBot.BotLogic
                              new[]
                              {
                                 InlineKeyboardButton.WithCallbackData("⏪","return")
+
                              }
+
 
                         });
                         await BotClient.SendTextMessageAsync(Chat, "Choose option", replyMarkup: inlineKeyboard);
@@ -91,6 +96,7 @@ namespace MyTelegramBot.BotLogic
                              }
                         });
 
+
                         await BotClient.SendTextMessageAsync(Chat, "Choose option", replyMarkup: inlineKeyboard);
 
                         break;
@@ -100,21 +106,34 @@ namespace MyTelegramBot.BotLogic
                         _menuState = MenuState.DownloadE;
                         await BotClient.SendTextMessageAsync(Chat, "Please send me your screenshot as Dokument for downloading.");
                         break;
-
-                    }  case "downloadGas":
+                    }
+                case "downloadGas":
                     {
                         _menuState = MenuState.DownloadG;
                         await BotClient.SendTextMessageAsync(Chat, "Please send me your screenshot as Dokument for downloading.");
                         break;
                     }
+                case "stateElec":
+                    {
+                        if (update.CallbackQuery != null)
+                        {
+                            await BotClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id, " Instruction:\n Enter keyword- `SE` then provide a state", showAlert: true);
+                        }
+                        break;
+                    }
+                case "stateGas":
+                    {
+                        throw new NotImplementedException();
+                    }
                 case "return":
                     {
+                       
+                        _menuState = MenuState.Main;
+                        await BotClient.DeleteMessageAsync(Chat.Id, callbackQuery.Message.MessageId);
                         await StartMenu();
                         break;
                     }
             }
-
         }
-
     }
 }

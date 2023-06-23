@@ -49,30 +49,31 @@ namespace MyTelegramBot
         public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
 
-            if (_chooseMenu == null)
-            {
-                _chooseMenu = new ChooseMenu(botClient, update.Message.Chat);
-            }
+            _chooseMenu ??= new ChooseMenu(botClient, update.Message.Chat);
+
             try
             {
                 switch (update.Type)
-                { 
+                {
                     case UpdateType.Message:
                         {
                             if (update.Message != null)
                             {
                                 await BotOnMessageReceiving(botClient, update.Message);
 
-                                if (update.Message?.Document != null && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadE || _chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadG)
+                                if (update.Message?.Document != null && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadE
+                                    || _chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadG)
                                 {
                                     IMessageSender messageSender = new TelegramMessageSender();
 
                                     IFilePathProvider filePathProvider = new DefaultFilePathProvider();
-                                    if(_chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadE)
+
+                                    if (_chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadE)
                                     {
                                         filePathProvider = new ElecFilePathProvider();
                                     }
-                                   else if(_chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadG)
+
+                                    else if (_chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadG)
                                     {
                                         filePathProvider = new GasFilePathProvider();
                                     }
@@ -83,6 +84,7 @@ namespace MyTelegramBot
                                     {
                                         messageSender = new TelegramMessageSender();
                                     }
+
                                     else
                                     {
                                         messageSender = new ConsoleMessageSender();
@@ -90,19 +92,29 @@ namespace MyTelegramBot
 
                                     var file = new TelegramFileDownloader(botClient, update, messageSender, filePathProvider);
 
-                                    await file.Download(); 
+                                    file.DownloadStarted += async () =>
+                                    {
+                                        await Console.Out.WriteLineAsync("Download Started!");
+                                    };
+                                    file.DownloadCompleted += async () =>
+                                    {
+                                        await Console.Out.WriteLineAsync("Download Completed!");
+                                    };
+                                    
+                                    await file.Download();
                                 }
                             }
 
                             break;
                         }
-                        
+
                     case UpdateType.CallbackQuery:
                         {
                             if (update.CallbackQuery != null)
                             {
                                 await _chooseMenu.OnAnswer(update, update.CallbackQuery);
                             }
+                           
                             break;
                         }
                 }
