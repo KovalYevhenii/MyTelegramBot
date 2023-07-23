@@ -1,4 +1,5 @@
 ﻿
+using System.Text.RegularExpressions;
 using System.Threading;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -55,7 +56,7 @@ namespace MyTelegramBot.BotLogic
         public async Task OnAnswer(Update update, CallbackQuery callbackQuery)
         {
             _menuState = MenuState.Settings;
-
+            
             switch (callbackQuery.Data)
             {
                 case "elec":
@@ -73,8 +74,6 @@ namespace MyTelegramBot.BotLogic
                                 InlineKeyboardButton.WithCallbackData("⏪","return")
 
                              }
-
-
                         });
                         await BotClient.SendTextMessageAsync(Chat, "Choose option", replyMarkup: inlineKeyboard);
 
@@ -115,10 +114,12 @@ namespace MyTelegramBot.BotLogic
                     }
                 case "stateElec":
                     {
+                        _menuState = MenuState.StateE;
                         if (update.CallbackQuery != null)
                         {
                             await BotClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id, " Instruction:\n Enter keyword- `SE` then provide a state", showAlert: true);
                         }
+                        
                         break;
                     }
                 case "stateGas":
@@ -127,13 +128,29 @@ namespace MyTelegramBot.BotLogic
                     }
                 case "return":
                     {
-                       
                         _menuState = MenuState.Main;
-                        await BotClient.DeleteMessageAsync(Chat.Id, callbackQuery.Message.MessageId);
                         await StartMenu();
                         break;
                     }
             }
+
         }
+        //private async Task <bool> StoreInputValue(string userInput)
+        //{
+
+        //    string pattern = @"^(SE|SG)\d+$";
+
+        //    if (Regex.IsMatch(userInput, pattern))
+        //    {
+        //        string intValue = userInput[2..];
+
+        //        if (int.TryParse(intValue, out int value))
+        //        {
+        //            await Console.Out.WriteLineAsync($"Valid Input.Value: {value}");
+        //            await botClient.SendTextMessageAsync(update.Message.Chat.Id, "Input accepted and stored");
+        //            return;
+        //        }
+        //    }
+        //}
     }
 }

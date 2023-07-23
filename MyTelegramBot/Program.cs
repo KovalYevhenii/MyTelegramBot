@@ -1,7 +1,7 @@
 ﻿using MyTelegramBot.BotLogic;
 using MyTelegramBot.MessageHandler;
 using MyTelegramBot.PathProvider;
-using System.Resources;
+using System.Text.RegularExpressions;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -59,6 +59,14 @@ namespace MyTelegramBot
                         {
                             if (update.Message != null)
                             {
+                                if (update.Message != null && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.StateE)
+                                {
+                                    if (update.Message?.Text != null)
+                                    {
+                                        string userInput = update.Message.Text.Trim();
+
+                                    }
+                                }
                                 await BotOnMessageReceiving(botClient, update.Message);
 
                                 if (update.Message?.Document != null && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadE
@@ -78,7 +86,7 @@ namespace MyTelegramBot
                                         filePathProvider = new GasFilePathProvider();
                                     }
 
-                                    bool useTelegramMessageSender = false; // Set to false if you want to use ConsoleMessageSender
+                                    bool useTelegramMessageSender = false;
 
                                     if (useTelegramMessageSender)
                                     {
@@ -100,11 +108,10 @@ namespace MyTelegramBot
                                     {
                                         await Console.Out.WriteLineAsync("Download Completed!");
                                     };
-                                    
+
                                     await file.Download();
                                 }
                             }
-
                             break;
                         }
 
@@ -128,13 +135,13 @@ namespace MyTelegramBot
         {
             ChooseMenu menu = new(botClient, message.Chat);
             var chatId = message.Chat.Id;
-            Console.WriteLine($"Recieved message type{message.Type} ");
+            Console.WriteLine($"Recieved message type{message.Type} {message.Text}");
 
             if (message.Type != MessageType.Text)
             {
                 return;
             }
-
+           
             var action = message.Text!.Split(' ')[0];
 
             switch (action)
