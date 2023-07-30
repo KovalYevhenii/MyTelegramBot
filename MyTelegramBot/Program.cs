@@ -1,4 +1,5 @@
 ﻿using MyTelegramBot.BotLogic;
+using MyTelegramBot.DBase;
 using MyTelegramBot.MessageHandler;
 using MyTelegramBot.PathProvider;
 using System.Text.RegularExpressions;
@@ -12,7 +13,7 @@ namespace MyTelegramBot
     class Programm
     {
         static readonly string _token = System.IO.File.ReadAllText("C:\\Users\\koval\\Desktop\\Projekts\\MyTelegramBotApp\\MyTelegramBot\\token.txt");
-
+       
         private static ChooseMenu? _chooseMenu;
 
         private static Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
@@ -48,8 +49,7 @@ namespace MyTelegramBot
         }
         public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-
-            _chooseMenu ??= new ChooseMenu(botClient, update.Message.Chat);
+           _chooseMenu ??= new ChooseMenu(botClient, update.Message.Chat);
 
             try
             {
@@ -59,17 +59,19 @@ namespace MyTelegramBot
                         {
                             if (update.Message != null)
                             {
-                                if (update.Message != null && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.StateE)
+                                if (_chooseMenu.GetMenuState() == ChooseMenu.MenuState.StateE)
                                 {
                                     if (update.Message?.Text != null)
                                     {
-                                        string userInput = update.Message.Text.Trim();
-
+                                        var userInput = update.Message.Text;
+                                        userInput.Trim();
+                                        UserRepository repository = new(Constants.ConnectionString);
+                                        repository.AddResource(userInput, update);
                                     }
                                 }
-                                await BotOnMessageReceiving(botClient, update.Message);
+                                await BotOnMessageRecieving(botClient, update.Message);
 
-                                if (update.Message?.Document != null && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadE
+                                if (update.Message?.Document != null && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadE//МОЖНО ЗАКИНУТЬ В ОТДЕЛЬНЫЙ МЕТОД
                                     || _chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadG)
                                 {
                                     IMessageSender messageSender = new TelegramMessageSender();
@@ -80,7 +82,7 @@ namespace MyTelegramBot
                                     {
                                         filePathProvider = new ElecFilePathProvider();
                                     }
-
+                                    
                                     else if (_chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadG)
                                     {
                                         filePathProvider = new GasFilePathProvider();
@@ -131,7 +133,7 @@ namespace MyTelegramBot
                 await HandlePollingErrorAsync(botClient, exception, cancellationToken);
             }
         }
-        public static async Task BotOnMessageReceiving(ITelegramBotClient botClient, Message message)
+        public static async Task BotOnMessageRecieving(ITelegramBotClient botClient, Message message)
         {
             ChooseMenu menu = new(botClient, message.Chat);
             var chatId = message.Chat.Id;

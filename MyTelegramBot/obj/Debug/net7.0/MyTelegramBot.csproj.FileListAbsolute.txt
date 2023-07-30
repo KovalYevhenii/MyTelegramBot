@@ -16,3 +16,6 @@ C:\Users\koval\Desktop\Projekts\MyTelegramBotApp\MyTelegramBot\obj\Debug\net7.0\
 C:\Users\koval\Desktop\Projekts\MyTelegramBotApp\MyTelegramBot\obj\Debug\net7.0\MyTelegramBot.pdb
 C:\Users\koval\Desktop\Projekts\MyTelegramBotApp\MyTelegramBot\obj\Debug\net7.0\MyTelegramBot.genruntimeconfig.cache
 C:\Users\koval\Desktop\Projekts\MyTelegramBotApp\MyTelegramBot\obj\Debug\net7.0\ref\MyTelegramBot.dll
+C:\Users\koval\Desktop\Projekts\MyTelegramBotApp\MyTelegramBot\bin\Debug\net7.0\Dapper.dll
+C:\Users\koval\Desktop\Projekts\MyTelegramBotApp\MyTelegramBot\bin\Debug\net7.0\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Users\koval\Desktop\Projekts\MyTelegramBotApp\MyTelegramBot\bin\Debug\net7.0\Npgsql.dll

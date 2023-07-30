@@ -119,7 +119,7 @@ namespace MyTelegramBot.BotLogic
                         {
                             await BotClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id, " Instruction:\n Enter keyword- `SE` then provide a state", showAlert: true);
                         }
-                        
+
                         break;
                     }
                 case "stateGas":
@@ -135,22 +135,5 @@ namespace MyTelegramBot.BotLogic
             }
 
         }
-        //private async Task <bool> StoreInputValue(string userInput)
-        //{
-
-        //    string pattern = @"^(SE|SG)\d+$";
-
-        //    if (Regex.IsMatch(userInput, pattern))
-        //    {
-        //        string intValue = userInput[2..];
-
-        //        if (int.TryParse(intValue, out int value))
-        //        {
-        //            await Console.Out.WriteLineAsync($"Valid Input.Value: {value}");
-        //            await botClient.SendTextMessageAsync(update.Message.Chat.Id, "Input accepted and stored");
-        //            return;
-        //        }
-        //    }
-        //}
     }
 }
