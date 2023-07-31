@@ -3,6 +3,7 @@
 using Dapper;
 using Npgsql;
 using System.ComponentModel.Design;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace MyTelegramBot.DBase
@@ -10,33 +11,46 @@ namespace MyTelegramBot.DBase
     internal class UserRepository : IUserRepository
     {
         private readonly string _connectionString;
-
-        public UserRepository(string connectionString)
+        private readonly ITelegramBotClient _botClient;
+        public UserRepository(string connectionString, ITelegramBotClient botClient)
         {
+            this._botClient = botClient;
             _connectionString = connectionString;
         }
 
-        public void AddResource(string input, Update update)
+        public async void AddResource(string input, Update update, IMessageSender message)
         {
-          
-            var userId = update.Message.From.Id;//1053778618
-            string resourceType;
+            var userId = update.Message?.From?.Id;
 
-            if (input.StartsWith("SE"))
+            try
             {
-              string numInput = new(input.Where(char.IsDigit).ToArray());
-                if(int.TryParse(numInput, out int amount))
+                if (input.StartsWith("SE") && update.Message != null)
                 {
+                    string numInput = new(input.Where(char.IsDigit).ToArray());
 
-                using var con = new NpgsqlConnection(_connectionString);
-                    con.Open();
-                    resourceType = "Electricity";
+                    if (int.TryParse(numInput, out int amount))
+                    {
+                        using (var con = new NpgsqlConnection(_connectionString))
+                        {
+                            string insertQuery = $"INSERT INTO resources(electricity,user_id) values({amount},{userId})";
 
-                    string insertQuery = $"INSERT INTO resources(electricity) values({amount})";
-                    con.Execute(insertQuery);
-                    Console.WriteLine("Value added");
+                            con.Execute(insertQuery);
+
+                            await message.SendTextMessageAsync(_botClient, update.Message.Chat.Id, "Stored! Have nice day:)");
+                        }
+                    }
+                    else
+                    {
+                        await message.SendTextMessageAsync(_botClient, update.Message.Chat.Id, "Wrong input Value:(");
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+
+                throw new Exception(ex.Message);
+            }
+
 
 
         }
@@ -63,9 +77,6 @@ namespace MyTelegramBot.DBase
         {
 
         }
-
     }
-
-
 }
 
