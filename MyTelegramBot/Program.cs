@@ -13,7 +13,7 @@ namespace MyTelegramBot
     class Programm
     {
         static readonly string _token = System.IO.File.ReadAllText("C:\\Users\\koval\\Desktop\\Projekts\\MyTelegramBotApp\\MyTelegramBot\\token.txt");
-       
+
         private static ChooseMenu? _chooseMenu;
 
         private static Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
@@ -49,7 +49,7 @@ namespace MyTelegramBot
         }
         public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-           _chooseMenu ??= new ChooseMenu(botClient, update.Message.Chat);
+            _chooseMenu ??= new ChooseMenu(botClient, update.Message.Chat);
 
             try
             {
@@ -64,9 +64,14 @@ namespace MyTelegramBot
                                     if (update.Message?.Text != null)
                                     {
                                         var userInput = update.Message.Text;
+
                                         userInput.Trim();
-                                        UserRepository repository = new(Constants.ConnectionString);
-                                        repository.AddResource(userInput, update);
+
+                                        UserRepository repository = new(Constants.ConnectionString,botClient);
+
+                                        IMessageSender message = new TelegramMessageSender();
+
+                                        repository.AddResource(userInput, update, message);
                                     }
                                 }
                                 await BotOnMessageRecieving(botClient, update.Message);
@@ -82,7 +87,7 @@ namespace MyTelegramBot
                                     {
                                         filePathProvider = new ElecFilePathProvider();
                                     }
-                                    
+
                                     else if (_chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadG)
                                     {
                                         filePathProvider = new GasFilePathProvider();
@@ -123,7 +128,7 @@ namespace MyTelegramBot
                             {
                                 await _chooseMenu.OnAnswer(update, update.CallbackQuery);
                             }
-                           
+
                             break;
                         }
                 }
@@ -143,7 +148,7 @@ namespace MyTelegramBot
             {
                 return;
             }
-           
+
             var action = message.Text!.Split(' ')[0];
 
             switch (action)

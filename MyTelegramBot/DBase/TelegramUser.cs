@@ -10,7 +10,8 @@ namespace MyTelegramBot.DBase
     {
         public int user_id { get; set; }
         public string? user_name { get; set; }
-        public int balance { get; set; }
+        public int balance_electricity { get; set; }
+        public int balance_gas { get; set; }
     }
     internal class Resources
     {
