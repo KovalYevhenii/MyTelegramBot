@@ -45,8 +45,8 @@ namespace MyTelegramBot
             Console.ReadLine();
 
             cts.Cancel();
-
         }
+
         public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
             _chooseMenu ??= new ChooseMenu(botClient, update.Message.Chat);
@@ -63,18 +63,20 @@ namespace MyTelegramBot
                                 {
                                     if (update.Message?.Text != null)
                                     {
-                                        var userInput = update.Message.Text;
+                                        var userInput = update.Message.Text.Trim();
 
-                                        userInput.Trim();
-
-                                        UserRepository repository = new(Constants.ConnectionString,botClient);
+                                        UserRepository repository = new(Constants.ConnectionString, botClient, update);
 
                                         IMessageSender message = new TelegramMessageSender();
 
-                                        repository.AddResource(userInput, update, message);
+                                        await repository.AddResource(userInput, message);
                                     }
                                 }
-                                await BotOnMessageRecieving(botClient, update.Message);
+
+                                else
+                                {
+                                    await BotOnMessageRecieving(botClient, update.Message);
+                                }
 
                                 if (update.Message?.Document != null && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadE//МОЖНО ЗАКИНУТЬ В ОТДЕЛЬНЫЙ МЕТОД
                                     || _chooseMenu.GetMenuState() == ChooseMenu.MenuState.DownloadG)

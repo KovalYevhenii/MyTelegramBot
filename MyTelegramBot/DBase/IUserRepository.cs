@@ -9,9 +9,11 @@ namespace MyTelegramBot.DBase
 {
     interface IUserRepository
     {
-        public Task AddResource(string input, Update update, IMessageSender message);
-        public void GetInfo(int id);
-        public void RemovePreviousState(int id);
-        public void UpdateState(int id, int newValue);
+        public Task AddResource(string input, IMessageSender message);
+        public Task GetInfo(int id);
+        public Task UpdateBalanceElec();
+        public Task UpdateBalanceGas();
+        public Task<int> GetPreviousBalanceElec();
+        public Task<int> GetPreviousBalanceGas();
     }
 }
