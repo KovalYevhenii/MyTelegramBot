@@ -15,6 +15,7 @@ namespace MyTelegramBot
         static readonly string _token = System.IO.File.ReadAllText("C:\\Users\\koval\\Desktop\\Projekts\\MyTelegramBotApp\\MyTelegramBot\\token.txt");
 
         private static ChooseMenu? _chooseMenu;
+        private static IUserRepository? _userRepository;
 
         private static Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
@@ -26,7 +27,6 @@ namespace MyTelegramBot
         {
             CancellationTokenSource cts = new();
             var bot = new TelegramBotClient(_token);
-
             var me = await bot.GetMeAsync();
             Console.WriteLine($"====Bot {me.FirstName} started====\n");
 
@@ -50,6 +50,7 @@ namespace MyTelegramBot
         public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
             _chooseMenu ??= new ChooseMenu(botClient, update.Message.Chat);
+            _userRepository ??= new UserRepository(Constants.ConnectionString, botClient, update);
 
             try
             {
@@ -129,6 +130,12 @@ namespace MyTelegramBot
                             if (update.CallbackQuery != null)
                             {
                                 await _chooseMenu.OnAnswer(update, update.CallbackQuery);
+
+                                if (update.CallbackQuery.Data == "balanceE")
+                                {
+                                    await Console.Out.WriteLineAsync("method shold work");
+                                    await _userRepository.UpdateBalanceElec();
+                                }
                             }
 
                             break;
