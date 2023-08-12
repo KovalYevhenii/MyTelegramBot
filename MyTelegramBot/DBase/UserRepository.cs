@@ -16,15 +16,14 @@ namespace MyTelegramBot.DBase
         private readonly ITelegramBotClient _botClient;
         private readonly long _userId;
         private readonly long _chatId;
-        private readonly string? _userName;
-      
+       
         public UserRepository(string connectionString, ITelegramBotClient botClient, Update update)
         {
             _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
             _botClient = botClient;
             _userId = update?.Message?.From?.Id ?? 0;
             _chatId = update?.Message?.Chat.Id ?? 0;
-            _userName = update?.Message?.From?.Username;
+           
         }
 
         public async Task AddResource(string input, IMessageSender message)
@@ -42,7 +41,6 @@ namespace MyTelegramBot.DBase
 
                         using (var con = new NpgsqlConnection(_connectionString))
                         {
-
                             await con.OpenAsync();
                             using (var cmd = new NpgsqlCommand(query, con))
                             {
@@ -51,7 +49,6 @@ namespace MyTelegramBot.DBase
 
                                 await cmd.ExecuteNonQueryAsync();
                             }
-                            con.Close();
                         }
 
                         await message.SendTextMessageAsync(_botClient, _chatId, "Stored! Have nice day:)");
@@ -73,7 +70,7 @@ namespace MyTelegramBot.DBase
             throw new NotImplementedException();
         }
 
-        public Task UpdateState(int id, int newValue)
+        public Task UpdateState()
         {
             throw new NotImplementedException();
         }
@@ -82,7 +79,7 @@ namespace MyTelegramBot.DBase
         {
             if (input.StartsWith("SE") || input.StartsWith("SG"))
             {
-                input = new(input.Where(char.IsDigit).ToArray());
+                input = new(input.Where(char.IsDigit).ToArray()); 
 
                 if (int.TryParse(input, out int amount))
                 {
@@ -94,21 +91,67 @@ namespace MyTelegramBot.DBase
 
         public async Task UpdateBalanceElec()
         {
-            using (var con = new NpgsqlConnection(_connectionString))
+            try
             {
-                string selectQuery = $"SELECT electricity FROM resources WHERE user_id = {_userId} ORDER BY DESC LIMIT 1";
-                var currentResourceValue = await con.QueryFirstOrDefaultAsync<int>(selectQuery);
+                using (var con = new NpgsqlConnection(_connectionString))
+                {
+                    await con.OpenAsync();
+                    string selectQuery = $"SELECT electricity FROM resources WHERE user_id = {_userId} ORDER BY electricity DESC LIMIT 1";
+                    var currentResourceValue = await con.QueryFirstOrDefaultAsync<int>(selectQuery);
 
-                var previousBalanse = await GetPreviousBalanceElec();
-                var difference = currentResourceValue - previousBalanse;
+                    var previousBalanse = await GetPreviousBalanceElec();
+                    var difference = currentResourceValue - previousBalanse;
 
-                string insertQuery = $"INSERT INTO users(user_id,user_name, balance_electrisity)VALUES({_userId},{_userName},{difference})";
+                    string updateQuery = $"UPDATE users SET balance_electricity = {difference} WHERE user_id = {_userId}";
+                    await con.ExecuteAsync(updateQuery);
+                }
+                await BalanceOutput("balance_electricity");
             }
-
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
         }
-        public Task UpdateBalanceGas()
+        private async Task BalanceOutput(string resuorceType)
         {
-            throw new NotImplementedException();
+            try
+            {
+                using (var con = new NpgsqlConnection(_connectionString))
+                {
+                    await con.OpenAsync();
+                    string selectQuery = $"SELECT {resuorceType} FROM users WHERE user_id = {_userId}";
+                    var balance = await con.QueryFirstOrDefaultAsync(selectQuery);
+
+                    await _botClient.SendTextMessageAsync(_chatId, $"{balance}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
+        }
+        public async Task UpdateBalanceGas()
+        {
+            try
+            {
+                using (var con = new NpgsqlConnection(_connectionString))
+                {
+                    await con.OpenAsync();
+                    string selectQuery = $"SELECT gas FROM resources WHERE user_id = {_userId} ORDER BY gas DESC LIMIT 1";
+                    var currentResourceValue = await con.QueryFirstOrDefaultAsync<int>(selectQuery);
+
+                    var previousBalanse = await GetPreviousBalanceGas();
+                    var difference = currentResourceValue - previousBalanse;
+
+                    string updateQuery = $"UPDATE users SET balance_gas = {difference} WHERE user_id = {_userId}";
+                    await con.ExecuteAsync(updateQuery);
+                }
+                await BalanceOutput("balance_electricity");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
         }
         public async Task<int> GetPreviousBalanceGas()
         {
@@ -116,10 +159,10 @@ namespace MyTelegramBot.DBase
             {
                 using (var con = new NpgsqlConnection(_connectionString))
                 {
-                    var selectQuery = $"SELECT balance_gas FROM users WHERE user_id = {_userId} ORDER BY balance_gas DESC LIMIT 1";
-                    
-                    var previousBalance = await con.QueryFirstOrDefaultAsync<int>(selectQuery);
+                    var selectQuery = $"SELECT gas FROM users WHERE user_id = {_userId} ORDER BY gas DESC LIMIT 1 OFFSET 1";
 
+                    var previousBalance = await con.QueryFirstOrDefaultAsync<int>(selectQuery);
+                  
                     return previousBalance;
                 }
             }
@@ -137,21 +180,20 @@ namespace MyTelegramBot.DBase
             {
                 using (var con = new NpgsqlConnection(_connectionString))
                 {
-                    var SelectQuery = $"SELECT balance_electricity FROM users WHERE user_id = {_userId} ORDER BY balance_electricity DESC LIMIT 1";
+                    var SelectQuery = $"SELECT electricity FROM resources WHERE user_id = {_userId} ORDER BY electricity DESC LIMIT 1 OFFSET 1";
 
                     var previousBalance = await con.QueryFirstOrDefaultAsync<int>(SelectQuery);
-
+                   
                     return previousBalance;
                 }
             }
-            catch (Exception ex)
+           catch (Exception ex)
             {
                 Console.WriteLine("An error occurred: " + ex.Message);
 
                 return 0;
             }
         }
-
     }
 }
 
