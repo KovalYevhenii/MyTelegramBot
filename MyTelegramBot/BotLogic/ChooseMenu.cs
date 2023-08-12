@@ -1,4 +1,5 @@
 ﻿
+using MyTelegramBot.DBase;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Telegram.Bot;
@@ -16,7 +17,8 @@ namespace MyTelegramBot.BotLogic
             DownloadE,
             DownloadG,
             StateE,
-            StateG
+            StateG,
+            BalanseE
         }
         private MenuState _menuState;
         public MenuState GetMenuState()
@@ -56,7 +58,7 @@ namespace MyTelegramBot.BotLogic
         public async Task OnAnswer(Update update, CallbackQuery callbackQuery)
         {
             _menuState = MenuState.Settings;
-            
+
             switch (callbackQuery.Data)
             {
                 case "elec":
@@ -67,7 +69,10 @@ namespace MyTelegramBot.BotLogic
                             {
                                 InlineKeyboardButton.WithCallbackData("Download electricity meter screenshot","downloadElec"),
 
-                                InlineKeyboardButton.WithCallbackData("Enter meter state","stateElec")
+                                InlineKeyboardButton.WithCallbackData("Enter meter state","stateElec"),
+
+                                InlineKeyboardButton.WithCallbackData("Get my State", "balanceE")
+
                             },
                              new[]
                              {
@@ -95,7 +100,6 @@ namespace MyTelegramBot.BotLogic
                              }
                         });
 
-
                         await BotClient.SendTextMessageAsync(Chat, "Choose option", replyMarkup: inlineKeyboard);
 
                         break;
@@ -117,15 +121,27 @@ namespace MyTelegramBot.BotLogic
                         _menuState = MenuState.StateE;
                         if (update.CallbackQuery != null)
                         {
-                            await BotClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id, " Instruction:\n Enter keyword- `SE` then provide a state", showAlert: true);
+                            await BotClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id, " Instruction:\n Enter keyword- SE then provide a state", showAlert: true);
                         }
 
                         break;
                     }
                 case "stateGas":
                     {
-                        throw new NotImplementedException();
+                        _menuState = MenuState.StateG;
+                        if (update.CallbackQuery != null)
+                        {
+                            await BotClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id, " Instruction:\n Enter keyword- SG then provide a state", showAlert: true);
+                        }
+
+                        break;
                     }
+                case "balanceE":
+                    {
+                        await BotClient.SendTextMessageAsync(Chat, "Here are your balance");
+                        break;
+                    }
+
                 case "return":
                     {
                         _menuState = MenuState.Main;
