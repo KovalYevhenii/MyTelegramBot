@@ -15,5 +15,7 @@ namespace MyTelegramBot.DBase
         public Task UpdateBalanceGas();
         public Task<int> GetPreviousBalanceElec();
         public Task<int> GetPreviousBalanceGas();
+
+        public Task<bool> Deleteresoure(string resourceName);
     }
 }
