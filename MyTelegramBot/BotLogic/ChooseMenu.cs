@@ -92,7 +92,9 @@ namespace MyTelegramBot.BotLogic
                             {
                                 InlineKeyboardButton.WithCallbackData("Download Gas meter screenshot","downloadGas"),
 
-                                InlineKeyboardButton.WithCallbackData("Enter meter state","stateGas")
+                                InlineKeyboardButton.WithCallbackData("Enter meter state","stateGas"),
+
+                                  InlineKeyboardButton.WithCallbackData("Get my State", "balanceG")
                             },
                              new[]
                              {
@@ -137,6 +139,11 @@ namespace MyTelegramBot.BotLogic
                         break;
                     }
                 case "balanceE":
+                    {
+                        await BotClient.SendTextMessageAsync(Chat, "Here are your balance");
+                        break;
+                    }
+                case "balanceG":
                     {
                         await BotClient.SendTextMessageAsync(Chat, "Here are your balance");
                         break;
