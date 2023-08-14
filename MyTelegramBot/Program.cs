@@ -27,18 +27,25 @@ namespace MyTelegramBot
         {
             CancellationTokenSource cts = new();
             var bot = new TelegramBotClient(_token);
-            var me = await bot.GetMeAsync();
-            Console.WriteLine($"====Bot {me.FirstName} started====\n");
+            try
+            {
+                var me = await bot.GetMeAsync();
+                Console.WriteLine($"====Bot {me.FirstName} started====\n");
 
-            bot.StartReceiving(
-                updateHandler: HandleUpdateAsync,
-                pollingErrorHandler: HandlePollingErrorAsync,
-                receiverOptions: new ReceiverOptions()
-                {
-                    AllowedUpdates = Array.Empty<UpdateType>() // receive all update types except ChatMember related updates
-                },
-                cancellationToken: cts.Token
-            );
+                bot.StartReceiving(
+                       updateHandler: HandleUpdateAsync,
+                       pollingErrorHandler: HandlePollingErrorAsync,
+                       receiverOptions: new ReceiverOptions()
+                       {
+                           AllowedUpdates = Array.Empty<UpdateType>() // receive all update types except ChatMember related updates
+                       },
+                       cancellationToken: cts.Token
+                   );
+            }
+            catch (NullReferenceException ex)
+            {
+                await Console.Out.WriteLineAsync("exception during start resieving" + ex.Message);
+            }
 
             Console.WriteLine("Press enter to stop My Bot");
 
@@ -49,7 +56,10 @@ namespace MyTelegramBot
 
         public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-            _chooseMenu ??= new ChooseMenu(botClient, update.Message.Chat);
+            if (update.Message != null)
+            {
+                _chooseMenu ??= new ChooseMenu(botClient, update.Message.Chat);
+            }
             _userRepository ??= new UserRepository(Constants.ConnectionString, botClient, update);
 
             try
@@ -60,7 +70,7 @@ namespace MyTelegramBot
                         {
                             if (update.Message != null)
                             {
-                                if (_chooseMenu.GetMenuState() == ChooseMenu.MenuState.StateE)
+                                if (_chooseMenu.GetMenuState() == ChooseMenu.MenuState.StateE || _chooseMenu.GetMenuState() == ChooseMenu.MenuState.StateG)
                                 {
                                     if (update.Message?.Text != null)
                                     {
@@ -127,17 +137,23 @@ namespace MyTelegramBot
 
                     case UpdateType.CallbackQuery:
                         {
-                            if (update.CallbackQuery != null)
+                            if (update.CallbackQuery != null && _chooseMenu != null)
                             {
                                 await _chooseMenu.OnAnswer(update, update.CallbackQuery);
 
                                 if (update.CallbackQuery.Data == "balanceE")
                                 {
-                                    await Console.Out.WriteLineAsync("method shold work");
                                     await _userRepository.UpdateBalanceElec();
                                 }
+                                if (update.CallbackQuery.Data == "balanceG")
+                                {
+                                    await _userRepository.UpdateBalanceGas();
+                                }
                             }
-
+                            else
+                            {
+                                throw new NullReferenceException();
+                            }
                             break;
                         }
                 }

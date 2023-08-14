@@ -70,7 +70,6 @@ namespace MyTelegramBot.DBase
             throw new NotImplementedException();
         }
 
-
         private int? InputValidator(string input)
         {
             if (input.StartsWith("SE") || input.StartsWith("SG"))
