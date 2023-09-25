@@ -9,7 +9,7 @@ namespace MyTelegramBot.Controller.DBase
     internal class Constants
     {
         public const string Login = "postgres";
-        public const string Password = "ec$fe<gG";
+        public const string Password = "root";
         public const string Host = "localhost";
         public const string Port = "5432";
         public const string DbName = "telegrambot";
