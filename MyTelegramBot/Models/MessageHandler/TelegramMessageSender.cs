@@ -1,11 +1,9 @@
-﻿
-
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 
-namespace MyTelegramBot
+namespace MyTelegramBot.Models.MessageHandler
 {
-    internal class TelegramMessageSender:IMessageSender
+    internal class TelegramMessageSender : IMessageSender
     {
         public async Task SendTextMessageAsync(ITelegramBotClient botClient, long chatId, string message)
         {

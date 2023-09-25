@@ -1,5 +1,4 @@
-﻿
-namespace MyTelegramBot.PathProvider
+﻿namespace MyTelegramBot.Models.PathProvider
 {
     public interface IFilePathProvider
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MyTelegramBot.DBase
+namespace MyTelegramBot.Models.Entityes
 {
     internal class TelegramUser
     {
@@ -12,11 +12,5 @@ namespace MyTelegramBot.DBase
         public string? user_name { get; set; }
         public int balance_electricity { get; set; }
         public int balance_gas { get; set; }
-    }
-    internal class Resources
-    {
-        public int gas { get; set; }
-        public int elctricity { get; set; }
-        public int user_id { get; set; }
     }
 }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MyTelegramBot.DBase
+namespace MyTelegramBot.Controller.DBase
 {
     internal class Constants
     {

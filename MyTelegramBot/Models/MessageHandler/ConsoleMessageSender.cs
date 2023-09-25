@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Telegram.Bot;
 
-namespace MyTelegramBot.MessageHandler
+namespace MyTelegramBot.Models.MessageHandler
 {
     public class ConsoleMessageSender : IMessageSender
     {
