@@ -3,7 +3,6 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace MyTelegramBot.View;
-
 public class ChooseMenu
 {
     private readonly ITelegramBotClient _botClient;
@@ -24,7 +23,9 @@ public class ChooseMenu
         StateE,
         StateG,
         BalanceE,
-        BalanceG
+        BalanceG,
+        YearBalanceE,
+        YearBalanceG
     }
     public MenuState GetMenuState()
     {
@@ -41,7 +42,7 @@ public class ChooseMenu
               new[] {
                 new[]
                 {
-                    InlineKeyboardButton.WithUrl("check Tarif", "check.24")
+                    InlineKeyboardButton.WithUrl("check Tarif", "https://www.check24.de/strom/vergleich/check24/?totalconsumption=2000&pricecap=no&zipcode=42119&city=Wuppertal&pid=24&pricing=month&product_id=1&calculationparameter_id=772b1d39b1ebc2fdf7581760533cf2b2")
                 },
                 new[]
                 {
@@ -50,6 +51,10 @@ public class ChooseMenu
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("Handle Gas resuorces", "gas")
+                },
+                 new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("Statistics", "statistic")
                 }
               });
 
@@ -63,12 +68,16 @@ public class ChooseMenu
                    new[] {
                         new[]
                         {
-                            InlineKeyboardButton.WithCallbackData("Download electricity meter screenshot","downloadElec"),
+                            InlineKeyboardButton.WithCallbackData("Upload Electricity","downloadElec"),
 
                             InlineKeyboardButton.WithCallbackData("Enter meter state","stateElec"),
 
-                            InlineKeyboardButton.WithCallbackData("my Balance", "balanceE")
+                            InlineKeyboardButton.WithCallbackData("Monthly balance", "balanceE")
 
+                        },
+                        new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Yearly balance", "YearBalanceE"),
                         },
                          new[]
                          {
@@ -84,11 +93,15 @@ public class ChooseMenu
                    new[] {
                         new[]
                         {
-                            InlineKeyboardButton.WithCallbackData("Download Gas meter screenshot","downloadGas"),
+                            InlineKeyboardButton.WithCallbackData("Upload Gas","downloadGas"),
 
                             InlineKeyboardButton.WithCallbackData("Enter meter state","stateGas"),
 
-                              InlineKeyboardButton.WithCallbackData("my Balance", "balanceG")
+                            InlineKeyboardButton.WithCallbackData("Monthly balance", "balanceG")
+                        },
+                        new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("Yearly balance", "YearBalanceG"),
                         },
                          new[]
                          {
@@ -128,9 +141,13 @@ public class ChooseMenu
     }
     public async Task HandleBalanceAsync()
     {
-        await _botClient.SendTextMessageAsync(_chat, "Here are your balance");
+        await _botClient.SendTextMessageAsync(_chat, "Here is your balance");
     }
- 
+    public async Task ChartMessage()
+    {
+        await _botClient.SendTextMessageAsync(_chat, "Please be patient,😅 I'm loading the graphics...");
+    }
+
     public async Task HandleReturnAsync()
     {
         SetMenuState(MenuState.Main);

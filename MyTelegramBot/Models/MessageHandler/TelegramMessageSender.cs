@@ -1,6 +1,4 @@
 ﻿using Telegram.Bot;
-using Telegram.Bot.Types;
-
 namespace MyTelegramBot.Models.MessageHandler
 {
     internal class TelegramMessageSender : IMessageSender

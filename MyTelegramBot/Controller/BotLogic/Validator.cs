@@ -15,9 +15,9 @@ public class Validator
     {
         if (input.StartsWith("SE") || input.StartsWith("SG"))
         {
-            input = new(input.Where(char.IsDigit).ToArray());
+            string numericPart = input.Substring(2);
 
-            if (int.TryParse(input, out int amount))
+            if (int.TryParse(numericPart, out int amount) && amount > 0)
             {
                 return amount;
             }

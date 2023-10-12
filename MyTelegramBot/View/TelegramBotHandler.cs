@@ -9,7 +9,6 @@ using Telegram.Bot.Types;
 using Telegram.Bot;
 
 namespace MyTelegramBot.View;
-
 internal class TelegramBotHandler : IHandlePollingErrorAsync, IHandleUpdateAsync
 {
 
@@ -22,7 +21,7 @@ internal class TelegramBotHandler : IHandlePollingErrorAsync, IHandleUpdateAsync
         {
             _chooseMenu ??= new ChooseMenu(botClient, update.Message.Chat);
         }
-        _userRepository ??= new UserRepository(Constants.ConnectionString, botClient, update);
+        _userRepository ??= new UserRepository(Constants.ConnectionString, update);
 
         try
         {
@@ -37,11 +36,21 @@ internal class TelegramBotHandler : IHandlePollingErrorAsync, IHandleUpdateAsync
                                 if (update.Message?.Text != null)
                                 {
                                     var userInput = update.Message.Text.Trim();
-
-                                    UserRepository repository = new(Constants.ConnectionString, botClient, update);
                                     Validator validator = new(botClient, update.Message.Chat);
+                                    await _userRepository.AddResource(userInput, validator);
 
-                                    await repository.AddResource(userInput, validator);
+                                    if (userInput.StartsWith("SE"))
+                                    {
+                                        await _userRepository.UpdateBalanceElec();
+                                    }
+                                    else if (userInput.StartsWith("SG"))
+                                    {
+                                        await _userRepository.UpdateBalanceGas();
+                                    }
+                                    else
+                                    {
+                                        await validator.HandleValidationFailureAsync();
+                                    }
                                 }
                             }
 
@@ -67,7 +76,7 @@ internal class TelegramBotHandler : IHandlePollingErrorAsync, IHandleUpdateAsync
                                     filePathProvider = new GasFilePathProvider();
                                 }
 
-                                bool useTelegramMessageSender = false;
+                                bool useTelegramMessageSender = true;
 
                                 if (useTelegramMessageSender)
                                 {
@@ -97,6 +106,8 @@ internal class TelegramBotHandler : IHandlePollingErrorAsync, IHandleUpdateAsync
 
                 case UpdateType.CallbackQuery:
                     {
+                        var chatId = update.CallbackQuery!.Message!.Chat.Id;
+
                         if (update.CallbackQuery != null && _chooseMenu != null)
                         {
                             ChooseMenuController controller = new(_chooseMenu);
@@ -106,15 +117,36 @@ internal class TelegramBotHandler : IHandlePollingErrorAsync, IHandleUpdateAsync
                             if (update.CallbackQuery.Data == "balanceE" && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.BalanceE)
                             {
                                 await _userRepository.UpdateBalanceElec();
+                                var res = await _userRepository.MonthlyBalanceOutput("balance_electricity");
+                                await botClient.SendTextMessageAsync(chatId, $"{string.Join(' ', res)}Kw", cancellationToken: cancellationToken);
                             }
                             if (update.CallbackQuery.Data == "balanceG" && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.BalanceG)
                             {
                                 await _userRepository.UpdateBalanceGas();
+                                var res = await _userRepository.MonthlyBalanceOutput("balance_gas");
+                                await botClient.SendTextMessageAsync(chatId, $"{string.Join(' ', res)}Kw");
+                            }
+                            if (update.CallbackQuery.Data == "YearBalanceE" && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.YearBalanceE)
+                            {
+                                var res = await _userRepository.TotalBalanceOutput("electricity");
+                                await botClient.SendTextMessageAsync(chatId, $"{string.Join(' ', res)}Kw");
+                            }
+                            if (update.CallbackQuery.Data == "YearBalanceG" && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.YearBalanceG)
+                            {
+                                var res = await _userRepository.TotalBalanceOutput("gas");
+                                await botClient.SendTextMessageAsync(chatId, $"{string.Join(' ', res)}Kw");
+                            }
+                            if (update.CallbackQuery.Data == "statistic" && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.Main)
+                            {
+                                var resElectricity = await _userRepository.YearValuesElectricity("year_balance_electricity");
+                                var resGas = await _userRepository.YearValuesElectricity("year_balance_gas");
+                                await botClient.SendTextMessageAsync(chatId, "Electricity consumption in Kw\t" + Chart.DisplayBarVerticalChart(resElectricity));
+                                await botClient.SendTextMessageAsync(chatId, "Gas consumption in Kw\t" + Chart.DisplayBarVerticalChart(resGas));
                             }
                         }
                         else
                         {
-                            throw new NullReferenceException();
+                            throw new NullReferenceException("Update callbackquery was null");
                         }
                         break;
                     }

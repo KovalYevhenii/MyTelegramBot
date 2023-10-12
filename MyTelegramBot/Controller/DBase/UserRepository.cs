@@ -1,34 +1,26 @@
 ﻿using Dapper;
 using MyTelegramBot.Controller.BotLogic;
 using Npgsql;
-using Telegram.Bot;
 using Telegram.Bot.Types;
 namespace MyTelegramBot.Controller.DBase;
-
 internal class UserRepository : IUserRepository
 {
     private readonly string _connectionString;
-    private readonly ITelegramBotClient _botClient;
     private readonly long _userId;
-    private readonly long _chatId;
-    public UserRepository(string connectionString, ITelegramBotClient botClient, Update update)
+    public UserRepository(string connectionString, Update update)
     {
         _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
-        _botClient = botClient;
         _userId = update?.Message?.From?.Id ?? 0;
-        _chatId = update?.Message?.Chat.Id ?? 0;
     }
-
     public async Task AddResource(string input, Validator validator)
     {
         var amount = Validator.InputValidator(input);
-
         try
         {
-            if (amount.HasValue && amount.Value > 0 && amount != null)
+            if (amount != null && amount.Value > 0)
             {
                 var tableName = input.StartsWith("SE") ? "electricity" : input.StartsWith("SG") ? "gas" : null;
-
+  
                 if (tableName != null)
                 {
                     using (var con = new NpgsqlConnection(_connectionString))
@@ -47,10 +39,7 @@ internal class UserRepository : IUserRepository
                     }
                 }
             }
-            else
-            {
-                await validator.HandleValidationFailureAsync();
-            }
+          
         }
         catch (NpgsqlException ex)
         {
@@ -68,8 +57,8 @@ internal class UserRepository : IUserRepository
         {
             using (var con = new NpgsqlConnection(_connectionString))
             {
+                string selectQuery = $"SELECT electricity FROM resources where electricity is not NULL Order By electricity desc limit 1";
                 await con.OpenAsync();
-                string selectQuery = $"SELECT distinct electricity FROM resources where electricity is not NULL Order By  electricity desc limit 1";
 
                 var currentResourceValue = await con.QueryFirstOrDefaultAsync<int>(selectQuery);
                 var previousBalanse = await GetPreviousBalanceElec();
@@ -77,10 +66,11 @@ internal class UserRepository : IUserRepository
                     currentResourceValue = previousBalanse;
                 var difference = currentResourceValue - previousBalanse;
 
-                string updateQuery = $"UPDATE users SET balance_electricity = {difference} WHERE user_id = {_userId}";
-                await con.ExecuteAsync(updateQuery);
+                string updateMontlyBalanceQuery = $"UPDATE users SET balance_electricity = {difference} WHERE user_id = {_userId}";
+                string yearBalanceInsertQuery = $"INSERT INTO  resources(year_balance_electricity, user_id) VALUES({difference},{_userId})";
+                await con.ExecuteAsync(updateMontlyBalanceQuery);
+                await con.ExecuteAsync(yearBalanceInsertQuery);
             }
-            await BalanceOutput("balance_electricity");
         }
         catch (Exception ex)
         {
@@ -94,8 +84,8 @@ internal class UserRepository : IUserRepository
         {
             using (var con = new NpgsqlConnection(_connectionString))
             {
+                string selectQuery = $"SELECT gas FROM resources where gas is not NULL Order By gas desc limit 1";
                 await con.OpenAsync();
-                string selectQuery = $"SELECT distinct gas FROM resources where gas is not NULL Order By  gas desc limit 1";
                 var currentResourceValue = await con.QueryFirstOrDefaultAsync<int?>(selectQuery);
 
                 var previousBalanse = await GetPreviousBalanceGas();
@@ -104,10 +94,11 @@ internal class UserRepository : IUserRepository
 
                 var difference = currentResourceValue - previousBalanse;
 
-                string updateQuery = $"UPDATE users SET balance_gas = {difference} WHERE user_id = {_userId}";
-                await con.ExecuteAsync(updateQuery);
+                string updateMontlyBalanceQuery = $"UPDATE users SET balance_gas = {difference} WHERE user_id = {_userId}";
+                string yearBalanceInsertQuery = $"INSERT INTO resources(year_balance_gas, user_id) VALUES({difference},{_userId})";
+                await con.ExecuteAsync(updateMontlyBalanceQuery);
+                await con.ExecuteAsync(yearBalanceInsertQuery);
             }
-            await BalanceOutput("balance_gas");
         }
         catch (Exception ex)
         {
@@ -115,7 +106,7 @@ internal class UserRepository : IUserRepository
         }
     }
 
-    private async Task BalanceOutput(string resuorceType)
+    public async Task<int> MonthlyBalanceOutput(string resuorceType)
     {
         try
         {
@@ -124,14 +115,14 @@ internal class UserRepository : IUserRepository
                 await con.OpenAsync();
                 string selectQuery = $"SELECT {resuorceType} FROM users WHERE user_id = {_userId}";
 
-                var balance = await con.QueryFirstOrDefaultAsync(selectQuery);
-
-                await _botClient.SendTextMessageAsync(_chatId, $"{string.Join(' ',balance)}");
+                var balance = await con.QueryFirstOrDefaultAsync<int>(selectQuery);
+                return balance;
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine("An error occurred: " + ex.Message);
+            return 0;
         }
     }
     public async Task<int> GetPreviousBalanceGas()
@@ -142,7 +133,7 @@ internal class UserRepository : IUserRepository
             {
                 await con.OpenAsync();
 
-                var selectQuery = $"SELECT distinct gas FROM resources WHERE gas is not null ORDER BY gas desc LIMIT 1 offset 1";
+                var selectQuery = $"SELECT gas FROM resources WHERE gas is not null ORDER BY gas desc LIMIT 1 offset 1";
 
                 var previousBalance = await con.QueryFirstOrDefaultAsync<int>(selectQuery);
 
@@ -163,9 +154,9 @@ internal class UserRepository : IUserRepository
         {
             using (var con = new NpgsqlConnection(_connectionString))
             {
-                var SelectQuery = $"SELECT distinct electricity FROM resources WHERE electricity is not null ORDER BY electricity desc LIMIT 1 offset 1";
+                var selectQuery = $"SELECT electricity FROM resources WHERE electricity is not null ORDER BY electricity desc LIMIT 1 offset 1";
 
-                var previousBalance = await con.QueryFirstOrDefaultAsync<int>(SelectQuery);
+                var previousBalance = await con.QueryFirstOrDefaultAsync<int>(selectQuery);
 
                 return previousBalance;
             }
@@ -173,7 +164,6 @@ internal class UserRepository : IUserRepository
         catch (Exception ex)
         {
             Console.WriteLine("An error occurred: " + ex.Message);
-
             return 0;
         }
     }
@@ -210,9 +200,9 @@ internal class UserRepository : IUserRepository
         {
             using (var con = new NpgsqlConnection(_connectionString))
             {
-                var SelectQuery = $"select add_user({_userId})";
+                var selectQuery = $"select add_user({_userId})";
                 await con.OpenAsync();
-                await con.ExecuteAsync(SelectQuery);
+                await con.ExecuteAsync(selectQuery);
             }
         }
         catch (Exception ex)
@@ -220,5 +210,43 @@ internal class UserRepository : IUserRepository
             Console.WriteLine("User validation procedure" + ex.Message);
         }
     }
-}
 
+    public async Task<int> TotalBalanceOutput(string resourceType)
+    {
+        try
+        {
+            using (var con = new NpgsqlConnection(_connectionString))
+            {
+                var selectCurrentQuery = $"SELECT {resourceType} FROM resources where {resourceType} is not NULL Order By {resourceType} desc limit 1";
+                var selectFirstAddedQuery = $"SELECT {resourceType} FROM resources where {resourceType} is not NULL Order By {resourceType} asc limit 1";
+                await con.OpenAsync();
+                var currentValue = await con.ExecuteScalarAsync<int>(selectCurrentQuery);
+                var firstAddedValue = await con.ExecuteScalarAsync<int>(selectFirstAddedQuery);
+                var result = currentValue - firstAddedValue;
+                return result;
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+    }
+    public async Task<List<int>> YearValuesElectricity(string resourceType)
+    {
+        try
+        {
+            using (var con = new NpgsqlConnection(_connectionString))
+            {
+                var selectYearBalanceQuery = $"select {resourceType} from resources where {resourceType} is not null";
+                await con.OpenAsync();
+                var result = await con.QueryAsync<int>(selectYearBalanceQuery);
+                var resultList = result.ToList();
+                return resultList;
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+    }
+}

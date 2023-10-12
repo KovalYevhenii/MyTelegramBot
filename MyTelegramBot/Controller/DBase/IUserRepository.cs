@@ -1,7 +1,5 @@
 ﻿using MyTelegramBot.Controller.BotLogic;
-
 namespace MyTelegramBot.Controller.DBase;
-
 interface IUserRepository
 {
     public Task AddUser();
@@ -11,4 +9,7 @@ interface IUserRepository
     public Task<int> GetPreviousBalanceElec();
     public Task<int> GetPreviousBalanceGas();
     public Task<bool> DeleteResoure(string resourceName);
+    public Task<int> MonthlyBalanceOutput(string resuorceType);
+    public Task<int> TotalBalanceOutput(string resourceType);
+    public Task<List<int>> YearValuesElectricity(string resourceType);
 }
