@@ -76,7 +76,7 @@ internal class TelegramBotHandler : IHandlePollingErrorAsync, IHandleUpdateAsync
                                     filePathProvider = new GasFilePathProvider();
                                 }
 
-                                bool useTelegramMessageSender = true;
+                                bool useTelegramMessageSender = false;
 
                                 if (useTelegramMessageSender)
                                 {
@@ -97,6 +97,7 @@ internal class TelegramBotHandler : IHandlePollingErrorAsync, IHandleUpdateAsync
                                 file.DownloadCompleted += async () =>
                                 {
                                     await Console.Out.WriteLineAsync("Download Completed!");
+                                    await botClient.SendTextMessageAsync(update.Message!.Chat.Id, "Download Completed!");
                                 };
                                 await file.DownloadDocument();
                             }
@@ -116,13 +117,11 @@ internal class TelegramBotHandler : IHandlePollingErrorAsync, IHandleUpdateAsync
 
                             if (update.CallbackQuery.Data == "balanceE" && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.BalanceE)
                             {
-                                await _userRepository.UpdateBalanceElec();
                                 var res = await _userRepository.MonthlyBalanceOutput("balance_electricity");
                                 await botClient.SendTextMessageAsync(chatId, $"{string.Join(' ', res)}Kw", cancellationToken: cancellationToken);
                             }
                             if (update.CallbackQuery.Data == "balanceG" && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.BalanceG)
                             {
-                                await _userRepository.UpdateBalanceGas();
                                 var res = await _userRepository.MonthlyBalanceOutput("balance_gas");
                                 await botClient.SendTextMessageAsync(chatId, $"{string.Join(' ', res)}Kw");
                             }
@@ -142,6 +141,18 @@ internal class TelegramBotHandler : IHandlePollingErrorAsync, IHandleUpdateAsync
                                 var resGas = await _userRepository.YearValuesElectricity("year_balance_gas");
                                 await botClient.SendTextMessageAsync(chatId, "Electricity consumption in Kw\t" + Chart.DisplayBarVerticalChart(resElectricity));
                                 await botClient.SendTextMessageAsync(chatId, "Gas consumption in Kw\t" + Chart.DisplayBarVerticalChart(resGas));
+                            }
+                            if (update.CallbackQuery.Data == "remove" && _chooseMenu.GetMenuState() == ChooseMenu.MenuState.Main)
+                            {
+                                var deletedTimestamp = await _userRepository.RemoveLastAddedValue();
+                                var deletedTimestamp2 = await _userRepository.RemoveLastAddedValue();
+                                if (deletedTimestamp != DateTime.MinValue && deletedTimestamp2.Value != DateTime.MinValue)
+                                {
+                                    await _chooseMenu.ShowDeletedTimestamp(deletedTimestamp);
+                                    await _chooseMenu.ShowDeletedTimestamp(deletedTimestamp2);
+                                } 
+                                else
+                                    await botClient.SendTextMessageAsync(chatId,"There is no values to Delete");
                             }
                         }
                         else
@@ -180,16 +191,11 @@ internal class TelegramBotHandler : IHandlePollingErrorAsync, IHandleUpdateAsync
                 }
             default:
                 {
-                    await StartMessage(botClient, chatId);
+                    await menu.StartMessage(botClient, chatId);
                     break;
                 }
         }
     }
-    public static async Task StartMessage(ITelegramBotClient botClient, ChatId chatId)
-    {
-        await botClient.SendTextMessageAsync(chatId, "Hi🥰, I was developed to make your day easier! press /start");
-    }
-
     public static Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
     {
         var errorMessage = exception.ToString();

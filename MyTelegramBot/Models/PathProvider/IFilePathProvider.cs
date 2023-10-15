@@ -1,7 +1,5 @@
-﻿namespace MyTelegramBot.Models.PathProvider
+﻿namespace MyTelegramBot.Models.PathProvider;
+public interface IFilePathProvider
 {
-    public interface IFilePathProvider
-    {
-        string GetDestinationFilePath(string fileName);
-    }
+    string GetDestinationFilePath(string fileName);
 }

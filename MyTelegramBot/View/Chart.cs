@@ -14,8 +14,9 @@ internal class Chart
         string[] dataLabels = { string.Join('|', values)};
         chartUrl += string.Join("|", dataLabels);
         // Specify custom colors for bars using chco parameter
-        chartUrl += "&chco=FF8000";
-      
-        return  chartUrl;
+        chartUrl += "&chco=FF8000|00FF00|0000FF|FF00FF|FF0000|00FFFF|9900CC|FFFF00|FF6600|33CC33|663366|0099CC";
+        chartUrl += "&chds=0,500"; // X, Y Axes
+
+        return chartUrl;
     }
 }

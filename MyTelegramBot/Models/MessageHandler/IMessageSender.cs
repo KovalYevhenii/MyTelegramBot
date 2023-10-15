@@ -1,9 +1,6 @@
 ﻿using Telegram.Bot;
-
-namespace MyTelegramBot.Models.MessageHandler
+namespace MyTelegramBot.Models.MessageHandler;
+public interface IMessageSender
 {
-    public interface IMessageSender
-    {
-        Task SendTextMessageAsync(ITelegramBotClient botClient, long chatId, string message);
-    }
+    Task SendTextMessageAsync(ITelegramBotClient botClient, long chatId, string message);
 }

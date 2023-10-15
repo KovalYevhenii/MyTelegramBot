@@ -20,12 +20,19 @@ internal class ChooseMenuController
                 }
             case "elec":
                 {
+                    _chooseMenu.SetMenuState(ChooseMenu.MenuState.Main);
                     await _chooseMenu.HandleElecOptionAsync();
                     break;
                 }
             case "gas":
-                {  
+                {
+                    _chooseMenu.SetMenuState(ChooseMenu.MenuState.Main);
                     await _chooseMenu.HandleGasOptionAsync();
+                    break;
+                }
+            case "remove":
+                {
+                    _chooseMenu.SetMenuState(ChooseMenu.MenuState.Main);
                     break;
                 }
             case "downloadElec":

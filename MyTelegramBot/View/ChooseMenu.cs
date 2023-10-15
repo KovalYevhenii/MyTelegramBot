@@ -52,13 +52,17 @@ public class ChooseMenu
                 {
                     InlineKeyboardButton.WithCallbackData("Handle Gas resuorces", "gas")
                 },
+                  new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("Remove last value", "remove")
+                },
                  new[]
                 {
                     InlineKeyboardButton.WithCallbackData("Statistics", "statistic")
                 }
               });
 
-        await _botClient.SendTextMessageAsync(_chat.Id,
+        await _botClient.SendTextMessageAsync(_chat,
                 $"Choose what you want to do",
                 replyMarkup: inlineKeyboard);
     }
@@ -68,9 +72,9 @@ public class ChooseMenu
                    new[] {
                         new[]
                         {
-                            InlineKeyboardButton.WithCallbackData("Upload Electricity","downloadElec"),
+                            InlineKeyboardButton.WithCallbackData("Upload Electricity", "downloadElec"),
 
-                            InlineKeyboardButton.WithCallbackData("Enter meter state","stateElec"),
+                            InlineKeyboardButton.WithCallbackData("Enter meter state", "stateElec"),
 
                             InlineKeyboardButton.WithCallbackData("Monthly balance", "balanceE")
 
@@ -81,7 +85,7 @@ public class ChooseMenu
                         },
                          new[]
                          {
-                            InlineKeyboardButton.WithCallbackData("⏪","return")
+                            InlineKeyboardButton.WithCallbackData("⏪", "return")
 
                          }
                    });
@@ -111,6 +115,10 @@ public class ChooseMenu
 
         await _botClient.SendTextMessageAsync(_chat, "Choose option", replyMarkup: inlineKeyboard);
     }
+    public async Task StartMessage(ITelegramBotClient botClient, ChatId chatId)
+    {
+        await botClient.SendTextMessageAsync(chatId, "Hi🥰, I was developed to make your day easier! press /start");
+    }
     public async Task HandleDownloadElecAsync()
     {
         SetMenuState(MenuState.DownloadE);
@@ -121,7 +129,6 @@ public class ChooseMenu
         SetMenuState(MenuState.DownloadG);
         await _botClient.SendTextMessageAsync(_chat, "Please send me your screenshot as Dokument for downloading.");
     }
-
     public async Task HandleStateElecAsync(Update update)
     {
         SetMenuState(MenuState.StateE);
@@ -130,7 +137,6 @@ public class ChooseMenu
             await _botClient.AnswerCallbackQueryAsync(update.CallbackQuery.Id, " Instruction:\n Enter keyword- SE then provide a state", showAlert: true);
         }
     }
-
     public async Task HandleStateGasAsync(Update update)
     {
         SetMenuState(MenuState.StateG);
@@ -147,7 +153,10 @@ public class ChooseMenu
     {
         await _botClient.SendTextMessageAsync(_chat, "Please be patient,😅 I'm loading the graphics...");
     }
-
+    public async Task ShowDeletedTimestamp(DateTime? dateTime)
+    {
+        await _botClient.SendTextMessageAsync(_chat, $"Value from {dateTime} deleted succsessfully");
+    }
     public async Task HandleReturnAsync()
     {
         SetMenuState(MenuState.Main);

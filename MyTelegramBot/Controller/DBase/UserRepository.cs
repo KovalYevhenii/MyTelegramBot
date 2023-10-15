@@ -1,6 +1,8 @@
 ﻿using Dapper;
 using MyTelegramBot.Controller.BotLogic;
 using Npgsql;
+using System.Data.Common;
+using System.Transactions;
 using Telegram.Bot.Types;
 namespace MyTelegramBot.Controller.DBase;
 internal class UserRepository : IUserRepository
@@ -20,7 +22,7 @@ internal class UserRepository : IUserRepository
             if (amount != null && amount.Value > 0)
             {
                 var tableName = input.StartsWith("SE") ? "electricity" : input.StartsWith("SG") ? "gas" : null;
-  
+
                 if (tableName != null)
                 {
                     using (var con = new NpgsqlConnection(_connectionString))
@@ -39,7 +41,6 @@ internal class UserRepository : IUserRepository
                     }
                 }
             }
-          
         }
         catch (NpgsqlException ex)
         {
@@ -168,32 +169,6 @@ internal class UserRepository : IUserRepository
         }
     }
 
-    public async Task<bool> DeleteResoure(string resourceName)
-    {
-        try
-        {
-            using (var con = new NpgsqlConnection(_connectionString))
-            {
-                var selectQuery = $"SELECT{resourceName},MAX(timestamp)from resources GROUP BY{resourceName}";
-                DateTime? lastTimeStamp = await con.ExecuteScalarAsync<DateTime>(selectQuery);
-
-                if (lastTimeStamp.HasValue)
-                {
-                    string deleteQuery = "DELETE from resources where timestamp = @lastTimeStamp";
-                    var rowsAffected = await con.ExecuteAsync(deleteQuery, new { lastTimeStamp });
-
-                    return rowsAffected > 0;
-                }
-                return false;
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("An error occurred: " + ex.Message);
-            return false;
-        }
-    }
-
     public async Task AddUser()
     {
         try
@@ -237,7 +212,7 @@ internal class UserRepository : IUserRepository
         {
             using (var con = new NpgsqlConnection(_connectionString))
             {
-                var selectYearBalanceQuery = $"select {resourceType} from resources where {resourceType} is not null";
+                var selectYearBalanceQuery = $"select {resourceType} from resources where {resourceType} is not null offset 1";
                 await con.OpenAsync();
                 var result = await con.QueryAsync<int>(selectYearBalanceQuery);
                 var resultList = result.ToList();
@@ -247,6 +222,34 @@ internal class UserRepository : IUserRepository
         catch (Exception ex)
         {
             throw new Exception(ex.Message);
+        }
+    }
+    public async Task<DateTime?> RemoveLastAddedValue()
+    {
+        using (var con = new NpgsqlConnection(_connectionString))
+        {
+            var removeLastAddedValueQuery = "delete from resources WHERE timestamp = (select MAX(timestamp) from resources)";
+            var selectLastAddedValueQuery = "select timestamp from resources where timestamp = (select MAX(timestamp) from resources)";
+            await con.OpenAsync();
+            using (var transaction = con.BeginTransaction())
+            {
+                try
+                {
+                    var selectedTimeStamp = await con.ExecuteScalarAsync<DateTime>(selectLastAddedValueQuery);
+                    if (selectedTimeStamp != null)
+                    {
+                        await con.ExecuteAsync(removeLastAddedValueQuery);
+                    }
+                    transaction.Commit();
+                    return selectedTimeStamp;
+                }
+                catch (Exception ex)
+                {
+                     transaction.Rollback();
+                    Console.WriteLine("The last added value can´t be deleted", ex.Message);
+                    return null;
+                }
+            }
         }
     }
 }
